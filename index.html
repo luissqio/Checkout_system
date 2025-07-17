@@ -407,6 +407,7 @@
 
         // Fake product database (barcode -> product details)
         const products = {
+            // Original products
             "CODE93-12345": { name: "Wireless Mouse", price: 25.99 },
             "CODE93-67890": { name: "Mechanical Keyboard", price: 79.99 },
             "CODE93-ABCDE": { name: "USB-C Hub", price: 35.50 },
@@ -451,13 +452,56 @@
             "CANDY-031": { name: "Snickers Bar", price: 1.75 },
             "CANDY-032": { name: "Kit Kat Bar", price: 1.50 },
             "CANDY-033": { name: "Milky Way Bar", price: 1.60 },
-            "CANDY-034": { name: "3 Musketeers Bar", price: 1.60 }
+            "CANDY-034": { name: "3 Musketeers Bar", price: 1.60 },
+            // New Gas Station Items
+            "GAS-001": { name: "Bottled Water (500ml)", price: 1.50 },
+            "GAS-002": { name: "Energy Drink (Can)", price: 3.00 },
+            "GAS-003": { name: "Coffee (Medium)", price: 2.75 },
+            "GAS-004": { name: "Soda (Can, Assorted)", price: 2.25 },
+            "GAS-005": { name: "Chips (Large Bag)", price: 3.50 },
+            "GAS-006": { name: "Beef Jerky (Original)", price: 6.99 },
+            "GAS-007": { name: "Gum (Pack)", price: 1.75 },
+            "GAS-008": { name: "Muffin (Blueberry)", price: 2.50 },
+            "GAS-009": { name: "Hot Dog (Roller Grill)", price: 3.99 },
+            "GAS-010": { name: "Donut (Glazed)", price: 1.99 },
+            "GAS-011": { name: "Windshield Wiper Fluid", price: 5.99 },
+            "GAS-012": { name: "Motor Oil (Quart)", price: 8.50 },
+            "GAS-013": { name: "Air Freshener (Car)", price: 4.25 },
+            "GAS-014": { name: "Disposable Gloves (Pack)", price: 2.00 },
+            "GAS-015": { name: "Travel Pillow", price: 12.00 },
+            "GAS-016": { name: "Phone Charger (USB-C)", price: 15.00 },
+            "GAS-017": { name: "Headphones (Basic Earbuds)", price: 9.99 },
+            "GAS-018": { name: "Sunscreen (Travel Size)", price: 7.50 },
+            "GAS-019": { name: "Pain Reliever (Small Pack)", price: 4.00 },
+            "GAS-020": { name: "Band-Aids (Small Pack)", price: 3.00 },
+            "GAS-021": { name: "Magazines (Assorted)", price: 5.00 },
+            "GAS-022": { name: "Newspaper", price: 1.50 },
+            "GAS-023": { name: "Playing Cards", price: 4.99 },
+            "GAS-024": { name: "Ice (Bag)", price: 2.99 },
+            "GAS-025": { name: "Pizza Slice (Pepperoni)", price: 4.50 },
+            "GAS-026": { name: "Sandwich (Turkey & Cheese)", price: 6.50 },
+            "GAS-027": { name: "Coffee Pods (Single Serve)", price: 1.25 },
+            "GAS-028": { name: "Protein Bar", price: 2.75 },
+            "GAS-029": { name: "Trail Mix (Bag)", price: 4.00 },
+            "GAS-030": { name: "Gummi Bears (Small)", price: 1.50 },
+            "GAS-031": { name: "Chocolate Bar (Large)", price: 3.00 },
+            "GAS-032": { name: "Breath Mints", price: 1.00 },
+            "GAS-033": { name: "Hand Sanitizer", price: 3.25 },
+            "GAS-034": { name: "Toilet Paper (Travel Roll)", price: 1.75 },
+            "GAS-035": { name: "Paper Towels (Small Roll)", price: 2.00 },
+            "GAS-036": { name: "Disposable Camera", price: 18.00 },
+            "GAS-037": { name: "Map (Local Area)", price: 7.00 },
+            "GAS-038": { name: "Flashlight (Mini)", price: 9.00 },
+            "GAS-039": { name: "Batteries (AA 4-pack)", price: 6.00 },
+            "GAS-040": { name: "Screwdriver Set (Small)", price: 11.00 }
         };
 
         // Predefined discount codes
         const discountCodes = {
             "SAVE10": { type: 'fixed', value: 10.00 }, // $10 off
-            "EMPLOYEE20": { type: 'percentage', value: 0.20 } // 20% off
+            "EMPLOYEE20": { type: 'percentage', value: 0.20 }, // 20% off
+            "SNACKTIME": { type: 'fixed', value: 2.00, appliesToCategory: 'CANDY' }, // $2 off candy
+            "BULKBAG": { type: 'percentage', value: 0.15, minItems: 5 } // 15% off if 5+ items
         };
 
         /**
@@ -625,8 +669,22 @@
          */
         function applyDiscount() {
             const code = discountCodeInput.value.toUpperCase().trim();
-            if (discountCodes.hasOwnProperty(code)) {
-                const discount = discountCodes[code];
+            const discount = discountCodes[code];
+
+            if (discount) {
+                // Check for specific conditions for discount application
+                if (discount.appliesToCategory) {
+                    const candyItems = cart.filter(item => item.name.includes('(Candy)') || item.name.startsWith('CANDY-')); // Simple check for candy items
+                    if (candyItems.length === 0) {
+                        showMessageModal(`Discount code "${code}" requires at least one candy item in the cart.`);
+                        return;
+                    }
+                }
+                if (discount.minItems && cart.length < discount.minItems) {
+                    showMessageModal(`Discount code "${code}" requires at least ${discount.minItems} items in the cart.`);
+                    return;
+                }
+
                 currentDiscount = discount; // Set the current discount object
 
                 let message = '';
