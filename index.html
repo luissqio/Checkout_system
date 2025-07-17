@@ -18,6 +18,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 1rem; /* Add some padding around the whole body */
         }
         .terminal-container {
             background: linear-gradient(145deg, #3f4a5a, #2d3748); /* Deeper gradient for the terminal body */
@@ -25,13 +26,12 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
             border: 2px solid #5a6a7c; /* Slightly lighter border */
             display: grid;
-            grid-template-columns: 1fr;
-            grid-template-rows: auto auto auto auto auto auto; /* More flexible auto rows for mobile */
+            grid-template-columns: 1fr; /* Default to single column for mobile */
+            grid-template-rows: auto; /* Auto rows for mobile flexibility */
             gap: 1.5rem; /* Increased gap for better spacing */
             padding: 2.5rem; /* Increased padding */
             max-width: 1200px;
             width: 100%;
-            /* Removed min-height here, let content dictate for mobile flexibility */
         }
 
         @media (min-width: 768px) {
@@ -48,7 +48,7 @@
             .petrol-section {
                 grid-column: 1 / 2;
                 grid-row: 2 / 3; /* Petrol below scanner on left */
-                align-self: start;
+                align-self: start; /* Align to top of its grid cell */
             }
             .cart-section {
                 grid-column: 2 / 3;
@@ -62,8 +62,8 @@
             }
             .discount-section {
                 grid-column: 2 / 3;
-                grid-row: 2 / 3;
-                align-self: start;
+                grid-row: 2 / 3; /* Discount below cart on right */
+                align-self: start; /* Align to top of its grid cell */
             }
             .controls-section {
                 grid-column: 1 / 3; /* Span both columns */
@@ -476,9 +476,10 @@
             "CODE93-PQRST": { name: "Webcam 1080p", price: 49.99 },
             "CODE93-UVWXY": { name: "Monitor 27-inch", price: 299.00 },
             "CODE93-Z1234": { name: "Ergonomic Chair", price: 350.00 },
-            "GAS-102": { name: "Smartwatch", price: 150.00 }, // Changed barcode from CODE93-56789
-            "0ABCD": { name: "Portable Speaker", price: 65.00 }, // This barcode was originally "CODE93-0ABCD", changing to just "0ABCD" for consistency with GAS-xxx
-            // New Gas Station Items (including Pepsi and more)
+            "CODE93-56789": { name: "Pepsi (Can)", price: 2.00 }, // Pepsi now uses this barcode
+            "GAS-102": { name: "Smartwatch", price: 150.00 }, // Smartwatch uses new barcode
+            "CODE93-0ABCD": { name: "Portable Speaker", price: 65.00 }, // Corrected barcode prefix
+            // New Gas Station Items
             "FUEL-UNLEADED95": { name: "Unleaded 95 Petrol", pricePerLiter: 1.65 },
             "FUEL-UNLEADED98": { name: "Unleaded 98 Petrol", pricePerLiter: 1.75 },
             "FUEL-DIESEL": { name: "Diesel Petrol", pricePerLiter: 1.70 },
@@ -581,8 +582,7 @@
             "GAS-097": { name: "Mini First Aid Kit", price: 8.00 },
             "GAS-098": { name: "Wet Wipes (Travel Pack)", price: 2.50 },
             "GAS-099": { name: "Tissues (Travel Pack)", price: 1.50 },
-            "GAS-100": { name: "Hand Warmer (Disposable)", price: 2.00 },
-            "GAS-101": { name: "Pepsi (Can)", price: 2.00 } // New Pepsi product
+            "GAS-100": { name: "Hand Warmer (Disposable)", price: 2.00 }
         };
 
         // Predefined discount codes
