@@ -21,32 +21,37 @@
             border: 2px solid #4a5568;
             display: grid;
             grid-template-columns: 1fr;
-            grid-template-rows: auto auto 1fr auto auto; /* Header, scanner, cart, discount, controls */
+            grid-template-rows: auto auto auto 1fr auto auto; /* Header, scanner, petrol, cart, discount, controls */
             gap: 1.5rem;
             padding: 2rem;
-            max-width: 1200px; /* Increased max-width for more space */
+            max-width: 1200px;
             width: 100%;
             min-height: 80vh;
         }
 
         @media (min-width: 768px) {
             .terminal-container {
-                grid-template-columns: 1fr 1.5fr; /* Scanner on left, cart/receipt on right */
+                grid-template-columns: 1fr 1.5fr; /* Scanner/Petrol on left, Cart/Discount on right */
                 grid-template-rows: auto 1fr auto; /* Header, main content, controls */
                 height: 85vh; /* Fixed height for desktop */
             }
             .scanner-section {
                 grid-column: 1 / 2;
-                grid-row: 1 / 3; /* Span header and main content rows */
+                grid-row: 1 / 2; /* Scanner in top-left */
+            }
+            .petrol-section {
+                grid-column: 1 / 2;
+                grid-row: 2 / 3; /* Petrol below scanner on left */
+                align-self: start;
             }
             .cart-section {
                 grid-column: 2 / 3;
-                grid-row: 1 / 2; /* Span header and main content rows */
+                grid-row: 1 / 2; /* Cart in top-right */
             }
             .discount-section {
                 grid-column: 2 / 3;
-                grid-row: 2 / 3; /* Below cart on desktop */
-                align-self: start; /* Align to top of its grid cell */
+                grid-row: 2 / 3; /* Discount below cart on right */
+                align-self: start;
             }
             .controls-section {
                 grid-column: 1 / 3; /* Span both columns */
@@ -155,6 +160,9 @@
         }
         .terminal-button.apply-discount {
             @apply bg-purple-700 hover:bg-purple-800 text-white border-purple-500 focus:ring-purple-600;
+        }
+        .terminal-button.add-fuel {
+            @apply bg-yellow-600 hover:bg-yellow-700 text-gray-900 border-yellow-500 focus:ring-yellow-600;
         }
 
         /* Modal styles (retained, but adjusted for consistency) */
@@ -270,6 +278,25 @@
             </button>
 
             <div id="error-message" class="text-red-400 mt-2 font-medium hidden"></div>
+        </div>
+
+        <div class="petrol-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
+            <h3 class="text-xl font-bold text-gray-200">Petrol Dispenser</h3>
+            <div class="w-full flex flex-col gap-2">
+                <label for="fuelType" class="text-gray-300 text-left w-full">Fuel Type:</label>
+                <select id="fuelType" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
+                    <option value="FUEL-UNLEADED95">Unleaded 95</option>
+                    <option value="FUEL-UNLEADED98">Unleaded 98</option>
+                    <option value="FUEL-DIESEL">Diesel</option>
+                </select>
+
+                <label for="fuelQuantity" class="text-gray-300 text-left w-full mt-2">Quantity (Litres):</label>
+                <input type="number" id="fuelQuantity" min="1" value="10" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
+            </div>
+            <p class="text-xl font-bold text-green-400">Fuel Cost: <span id="fuelCost">$0.00</span></p>
+            <button id="addFuelToCartButton" class="terminal-button add-fuel w-full">
+                Add Petrol to Cart
+            </button>
         </div>
 
         <div class="cart-section flex flex-col">
@@ -388,6 +415,12 @@
         const applyDiscountButton = document.getElementById('applyDiscountButton');
         const discountStatus = document.getElementById('discountStatus');
 
+        // Petrol section elements
+        const fuelTypeSelect = document.getElementById('fuelType');
+        const fuelQuantityInput = document.getElementById('fuelQuantity');
+        const fuelCostSpan = document.getElementById('fuelCost');
+        const addFuelToCartButton = document.getElementById('addFuelToCartButton');
+
         // General Message Modal elements
         const messageModal = document.getElementById('messageModal');
         const modalMessage = document.getElementById('modal-message');
@@ -407,53 +440,10 @@
 
         // Fake product database (barcode -> product details)
         const products = {
-            // Original products
-            "CODE93-12345": { name: "Wireless Mouse", price: 25.99 },
-            "CODE93-67890": { name: "Mechanical Keyboard", price: 79.99 },
-            "CODE93-ABCDE": { name: "USB-C Hub", price: 35.50 },
-            "CODE93-FGHIJ": { name: "External SSD 1TB", price: 120.00 },
-            "CODE93-KLMNO": { name: "Noise-Cancelling Headphones", price: 199.99 },
-            "CODE93-PQRST": { name: "Webcam 1080p", price: 49.99 },
-            "CODE93-UVWXY": { name: "Monitor 27-inch", price: 299.00 },
-            "CODE93-Z1234": { name: "Ergonomic Chair", price: 350.00 },
-            "CODE93-56789": { name: "Smartwatch", price: 150.00 },
-            "CODE93-0ABCD": { name: "Portable Speaker", price: 65.00 },
-            // Candy Products
-            "CANDY-001": { name: "Gummy Bears (Large)", price: 4.50 },
-            "CANDY-002": { name: "Chocolate Bar (Milk)", price: 2.00 },
-            "CANDY-003": { name: "Sour Worms (Bag)", price: 3.75 },
-            "CANDY-004": { name: "Lollipop (Assorted)", price: 0.75 },
-            "CANDY-005": { name: "Peppermint Candies", price: 2.25 },
-            "CANDY-006": { name: "Caramel Chews", price: 3.00 },
-            "CANDY-007": { name: "Jelly Beans (Mix)", price: 5.00 },
-            "CANDY-008": { name: "Hard Candy Drops", price: 2.50 },
-            "CANDY-009": { name: "Bubblegum (Pack)", price: 1.25 },
-            "CANDY-010": { name: "Licorice Twists", price: 3.25 },
-            "CANDY-011": { name: "Cotton Candy (Tub)", price: 4.00 },
-            "CANDY-012": { name: "Rock Candy Stick", price: 1.50 },
-            "CANDY-013": { name: "Chocolate Truffles (Box)", price: 8.99 },
-            "CANDY-014": { name: "Fruit Chews (Bag)", price: 2.99 },
-            "CANDY-015": { name: "Marshmallows (Giant)", price: 3.50 },
-            "CANDY-016": { name: "Toffee Squares", price: 4.25 },
-            "CANDY-017": { name: "Gumball Machine Refill", price: 6.00 },
-            "CANDY-018": { name: "Chocolate Covered Pretzels", price: 5.50 },
-            "CANDY-019": { name: "Peanut Brittle", price: 6.50 },
-            "CANDY-020": { name: "Candy Buttons (Strip)", price: 1.00 },
-            "CANDY-021": { name: "Fudge (Slice)", price: 4.75 },
-            "CANDY-022": { name: "Chocolate Coins (Bag)", price: 3.99 },
-            "CANDY-023": { name: "Swedish Fish", price: 2.75 },
-            "CANDY-024": { name: "Nerds (Box)", price: 1.75 },
-            "CANDY-025": { name: "Skittles (Large Bag)", price: 3.00 },
-            "CANDY-026": { name: "M&M's (King Size)", price: 2.50 },
-            "CANDY-027": { name: "Reese's Peanut Butter Cups (2-pack)", price: 2.25 },
-            "CANDY-028": { name: "Twizzlers (Large Pack)", price: 3.25 },
-            "CANDY-029": { name: "Starburst (Bag)", price: 2.80 },
-            "CANDY-030": { name: "Hershey's Kisses (Bag)", price: 4.00 },
-            "CANDY-031": { name: "Snickers Bar", price: 1.75 },
-            "CANDY-032": { name: "Kit Kat Bar", price: 1.50 },
-            "CANDY-033": { name: "Milky Way Bar", price: 1.60 },
-            "CANDY-034": { name: "3 Musketeers Bar", price: 1.60 },
             // New Gas Station Items
+            "FUEL-UNLEADED95": { name: "Unleaded 95 Petrol", pricePerLiter: 1.65 },
+            "FUEL-UNLEADED98": { name: "Unleaded 98 Petrol", pricePerLiter: 1.75 },
+            "FUEL-DIESEL": { name: "Diesel Petrol", pricePerLiter: 1.70 },
             "GAS-001": { name: "Bottled Water (500ml)", price: 1.50 },
             "GAS-002": { name: "Energy Drink (Can)", price: 3.00 },
             "GAS-003": { name: "Coffee (Medium)", price: 2.75 },
@@ -493,15 +483,76 @@
             "GAS-037": { name: "Map (Local Area)", price: 7.00 },
             "GAS-038": { name: "Flashlight (Mini)", price: 9.00 },
             "GAS-039": { name: "Batteries (AA 4-pack)", price: 6.00 },
-            "GAS-040": { name: "Screwdriver Set (Small)", price: 11.00 }
+            "GAS-040": { name: "Screwdriver Set (Small)", price: 11.00 },
+            "GAS-041": { name: "Phone Mount (Car)", price: 14.99 },
+            "GAS-042": { name: "Air Pump (Tyre)", price: 25.00 },
+            "GAS-043": { name: "Screen Cleaner (Wipes)", price: 3.00 },
+            "GAS-044": { name: "Travel Mug", price: 8.99 },
+            "GAS-045": { name: "Ear Plugs (Pack)", price: 2.50 },
+            "GAS-046": { name: "Chewing Tobacco (Can)", price: 7.50 },
+            "GAS-047": { name: "Cigarettes (Pack)", price: 12.00 },
+            "GAS-048": { name: "Lighter", price: 1.50 },
+            "GAS-049": { name: "Lottery Ticket", price: 1.00 },
+            "GAS-050": { name: "Scratch Card", price: 2.00 },
+            "GAS-051": { name: "Deodorant (Travel Size)", price: 4.00 },
+            "GAS-052": { name: "Toothbrush (Travel)", price: 3.00 },
+            "GAS-053": { name: "Toothpaste (Travel)", price: 2.50 },
+            "GAS-054": { name: "Shaving Cream (Travel)", price: 3.50 },
+            "GAS-055": { name: "Razor (Disposable)", price: 2.00 },
+            "GAS-056": { name: "Hand Cream (Small)", price: 4.00 },
+            "GAS-057": { name: "Lip Balm", price: 2.00 },
+            "GAS-058": { name: "Sunglasses (Cheap)", price: 7.00 },
+            "GAS-059": { name: "Umbrella (Compact)", price: 10.00 },
+            "GAS-060": { name: "Rain Poncho", price: 5.00 },
+            "GAS-061": { name: "Gloves (Work)", price: 8.00 },
+            "GAS-062": { name: "Duct Tape (Travel Roll)", price: 6.00 },
+            "GAS-063": { name: "Zip Ties (Pack)", price: 3.00 },
+            "GAS-064": { name: "First Aid Kit (Small)", price: 15.00 },
+            "GAS-065": { name: "Cooler Bag (Small)", price: 18.00 },
+            "GAS-066": { name: "Reusable Shopping Bag", price: 1.00 },
+            "GAS-067": { name: "Pet Food (Small Can)", price: 2.50 },
+            "GAS-068": { name: "Dog Toy", price: 5.00 },
+            "GAS-069": { name: "Cat Food (Small Can)", price: 2.50 },
+            "GAS-070": { name: "Cat Toy", price: 4.00 },
+            "GAS-071": { name: "Phone Case (Universal)", price: 10.00 },
+            "GAS-072": { name: "Screen Protector", price: 8.00 },
+            "GAS-073": { name: "USB Drive (16GB)", price: 7.00 },
+            "GAS-074": { name: "Aux Cable", price: 6.00 },
+            "GAS-075": { name: "Car Air Freshener (Clip)", price: 3.50 },
+            "GAS-076": { name: "Tyre Pressure Gauge", price: 7.00 },
+            "GAS-077": { name: "Jumper Cables", price: 25.00 },
+            "GAS-078": { name: "Emergency Roadside Kit", price: 40.00 },
+            "GAS-079": { name: "Ice Scraper", price: 4.00 },
+            "GAS-080": { name: "Snow Brush", price: 6.00 },
+            "GAS-081": { name: "Antifreeze (Small Bottle)", price: 9.00 },
+            "GAS-082": { name: "Funnel", price: 3.00 },
+            "GAS-083": { name: "Paper Maps (Regional)", price: 8.00 },
+            "GAS-084": { name: "Disposable Camera", price: 18.00 },
+            "GAS-085": { name: "Road Atlas", price: 15.00 },
+            "GAS-086": { name: "Binoculars (Compact)", price: 22.00 },
+            "GAS-087": { name: "Compass", price: 10.00 },
+            "GAS-088": { name: "Whistle (Emergency)", price: 3.00 },
+            "GAS-089": { name: "Emergency Blanket", price: 7.00 },
+            "GAS-090": { name: "Duct Tape (Full Roll)", price: 10.00 },
+            "GAS-091": { name: "Work Gloves (Heavy Duty)", price: 12.00 },
+            "GAS-092": { name: "Screwdriver Set (Multi-bit)", price: 15.00 },
+            "GAS-093": { name: "Pliers (Small)", price: 9.00 },
+            "GAS-094": { name: "Adjustable Wrench (Small)", price: 11.00 },
+            "GAS-095": { name: "Tyre Repair Kit", price: 20.00 },
+            "GAS-096": { name: "Headlamp", price: 16.00 },
+            "GAS-097": { name: "Mini First Aid Kit", price: 8.00 },
+            "GAS-098": { name: "Wet Wipes (Travel Pack)", price: 2.50 },
+            "GAS-099": { name: "Tissues (Travel Pack)", price: 1.50 },
+            "GAS-100": { name: "Hand Warmer (Disposable)", price: 2.00 }
         };
 
         // Predefined discount codes
         const discountCodes = {
             "SAVE10": { type: 'fixed', value: 10.00 }, // $10 off
             "EMPLOYEE20": { type: 'percentage', value: 0.20 }, // 20% off
-            "SNACKTIME": { type: 'fixed', value: 2.00, appliesToCategory: 'CANDY' }, // $2 off candy
-            "BULKBAG": { type: 'percentage', value: 0.15, minItems: 5 } // 15% off if 5+ items
+            "SNACKTIME": { type: 'fixed', value: 2.00, appliesToCategory: 'CANDY' }, // $2 off candy products
+            "BULKBAG": { type: 'percentage', value: 0.15, minItems: 5 }, // 15% off if 5+ items
+            "FUELUP": { type: 'fixed', value: 5.00, appliesToCategory: 'FUEL' } // $5 off fuel purchase
         };
 
         /**
@@ -674,9 +725,9 @@
             if (discount) {
                 // Check for specific conditions for discount application
                 if (discount.appliesToCategory) {
-                    const candyItems = cart.filter(item => item.name.includes('(Candy)') || item.name.startsWith('CANDY-')); // Simple check for candy items
-                    if (candyItems.length === 0) {
-                        showMessageModal(`Discount code "${code}" requires at least one candy item in the cart.`);
+                    const relevantItems = cart.filter(item => item.barcode && item.barcode.startsWith(discount.appliesToCategory));
+                    if (relevantItems.length === 0) {
+                        showMessageModal(`Discount code "${code}" requires at least one ${discount.appliesToCategory} item in the cart.`);
                         return;
                     }
                 }
@@ -740,6 +791,46 @@
             discountStatus.textContent = ''; // Clear discount status
             updateCartDisplay();
         }
+
+        /**
+         * Calculates and displays the fuel cost based on type and quantity.
+         */
+        function calculateFuelCost() {
+            const fuelBarcode = fuelTypeSelect.value;
+            const quantity = parseFloat(fuelQuantityInput.value);
+            const fuelProduct = products[fuelBarcode];
+
+            if (fuelProduct && !isNaN(quantity) && quantity > 0) {
+                const cost = fuelProduct.pricePerLiter * quantity;
+                fuelCostSpan.textContent = `$${cost.toFixed(2)}`;
+            } else {
+                fuelCostSpan.textContent = `$0.00`;
+            }
+        }
+
+        /**
+         * Adds the selected fuel to the cart.
+         */
+        function addFuelToCart() {
+            const fuelBarcode = fuelTypeSelect.value;
+            const quantity = parseFloat(fuelQuantityInput.value);
+            const fuelProduct = products[fuelBarcode];
+
+            if (fuelProduct && !isNaN(quantity) && quantity > 0) {
+                const fuelCost = fuelProduct.pricePerLiter * quantity;
+                cart.push({
+                    name: `${fuelProduct.name} (${quantity} Litres)`,
+                    price: fuelCost,
+                    barcode: fuelBarcode // Store barcode for discount logic
+                });
+                updateCartDisplay();
+                showMessageModal(`${fuelProduct.name} (${quantity} Litres) added to cart for $${fuelCost.toFixed(2)}!`);
+                playScanSound(); // Play sound for fuel addition
+            } else {
+                showMessageModal("Please enter a valid fuel quantity.");
+            }
+        }
+
 
         /**
          * Initializes and starts the QuaggaJS barcode scanner.
@@ -806,13 +897,16 @@
 
                     // Check if the scanned code exists in our fake product database
                     const product = products[scannedCode];
-                    if (product) {
-                        cart.push(product); // Add product to cart
+                    if (product && product.price) { // Ensure it's a regular product, not fuel
+                        cart.push({ name: product.name, price: product.price, barcode: scannedCode }); // Add barcode to item
                         updateCartDisplay(); // Update the cart display
                         showMessageModal(`${product.name} ($${product.price.toFixed(2)}) added to cart!`);
                         playScanSound(); // Play sound on successful scan
                         lastScanTime = currentTime; // Update last scan time
-                    } else {
+                    } else if (product && product.pricePerLiter) {
+                        showMessageModal(`Please use the 'Petrol Dispenser' section to add fuel.`);
+                    }
+                    else {
                         showMessageModal(`Product with barcode "${scannedCode}" not found.`);
                     }
                 }
@@ -863,6 +957,10 @@
         function generateBarcodes() {
             generatedBarcodesDiv.innerHTML = ''; // Clear existing barcodes
             for (const barcode in products) {
+                // Skip fuel products for barcode generation as they are added via the dispenser
+                if (barcode.startsWith("FUEL-")) {
+                    continue;
+                }
                 if (products.hasOwnProperty(barcode)) {
                     const product = products[barcode];
                     const barcodeItemDiv = document.createElement('div');
@@ -905,11 +1003,18 @@
         checkoutButton.addEventListener('click', checkout);
         applyDiscountButton.addEventListener('click', applyDiscount);
 
+        // Petrol section event listeners
+        fuelTypeSelect.addEventListener('change', calculateFuelCost);
+        fuelQuantityInput.addEventListener('input', calculateFuelCost);
+        addFuelToCartButton.addEventListener('click', addFuelToCart);
+
+
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
             initScanSound(); // Initialize Tone.js synth
             updateCartDisplay(); // Initialize cart display
             generateBarcodes(); // Generate barcodes on page load
+            calculateFuelCost(); // Calculate initial fuel cost
             startScanner(); // Auto-start the scanner
         });
     </script>
