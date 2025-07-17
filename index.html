@@ -27,32 +27,46 @@
             border: 2px solid #5a6a7c; /* Slightly lighter border */
             display: grid;
             grid-template-columns: 1fr; /* Default to single column for mobile */
-            grid-template-rows: auto; /* Auto rows for mobile flexibility */
+            grid-template-rows: auto auto 1fr auto; /* Header, Main Content Area, Controls, Barcodes */
             gap: 1.5rem; /* Increased gap for better spacing */
             padding: 2.5rem; /* Increased padding */
             max-width: 1200px;
             width: 100%;
         }
 
+        /* Inner grid for main content sections */
+        .main-content-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to single column for mobile */
+            grid-template-rows: auto auto auto auto; /* Scanner, Petrol, Cart, Discount stacked */
+            gap: 1.5rem;
+            height: 100%; /* Ensure it takes full height of its parent grid cell */
+        }
+
         @media (min-width: 768px) {
             .terminal-container {
-                grid-template-columns: 1fr 1.5fr; /* Scanner/Petrol on left, Cart/Discount on right */
-                grid-template-rows: auto 1fr auto; /* Header, main content, controls */
+                /* Header, Main Content Area (takes remaining height), Controls */
+                grid-template-rows: auto 1fr auto;
                 height: 85vh; /* Fixed height for desktop */
                 gap: 2rem; /* Larger gap on desktop */
             }
+            .main-content-grid {
+                grid-template-columns: 1fr 1.5fr; /* Scanner/Petrol on left, Cart/Discount on right */
+                grid-template-rows: 1fr auto; /* Top row for scanner/cart, bottom row for petrol/discount */
+                gap: 2rem;
+            }
             .scanner-section {
                 grid-column: 1 / 2;
-                grid-row: 1 / 2; /* Scanner in top-left */
+                grid-row: 1 / 2;
             }
             .petrol-section {
                 grid-column: 1 / 2;
-                grid-row: 2 / 3; /* Petrol below scanner on left */
-                align-self: start; /* Align to top of its grid cell */
+                grid-row: 2 / 3;
+                align-self: start;
             }
             .cart-section {
                 grid-column: 2 / 3;
-                grid-row: 1 / 2; /* Cart in top-right */
+                grid-row: 1 / 2;
                 display: flex; /* Make cart section a flex container */
                 flex-direction: column; /* Stack children vertically */
             }
@@ -62,12 +76,11 @@
             }
             .discount-section {
                 grid-column: 2 / 3;
-                grid-row: 2 / 3; /* Discount below cart on right */
-                align-self: start; /* Align to top of its grid cell */
+                grid-row: 2 / 3;
+                align-self: start;
             }
             .controls-section {
                 grid-column: 1 / 3; /* Span both columns */
-                grid-row: 3 / 4;
             }
         }
 
@@ -290,63 +303,65 @@
             <p class="text-lg text-gray-400">Code 93 Barcode Terminal</p>
         </div>
 
-        <div class="scanner-section flex flex-col items-center gap-4">
-            <div id="interactive" class="viewport bg-gray-900 relative">
-                <!-- The video stream will be rendered here by QuaggaJS -->
-                <div class="scanner-frame"></div>
+        <!-- Main Content Grid for PC layout -->
+        <div class="main-content-grid">
+            <div class="scanner-section flex flex-col items-center gap-4">
+                <div id="interactive" class="viewport bg-gray-900 relative">
+                    <!-- The video stream will be rendered here by QuaggaJS -->
+                    <div class="scanner-frame"></div>
+                </div>
+
+                <div id="result" class="bg-blue-900 text-blue-300 p-4 rounded-lg text-lg font-semibold break-words w-full text-center">
+                    Scan a Code 93 barcode.
+                </div>
+
+                <button id="startStopButton" class="terminal-button start-stop w-full">
+                    Stop Scanner
+                </button>
+
+                <div id="error-message" class="text-red-400 mt-2 font-medium hidden"></div>
             </div>
 
-            <div id="result" class="bg-blue-900 text-blue-300 p-4 rounded-lg text-lg font-semibold break-words w-full text-center">
-                Scan a Code 93 barcode.
-            </div>
+            <div class="petrol-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
+                <h3 class="text-xl font-bold text-gray-200">Petrol Dispenser</h3>
+                <div class="w-full flex flex-col gap-2">
+                    <label for="fuelType" class="text-gray-300 text-left w-full">Fuel Type:</label>
+                    <select id="fuelType" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
+                        <option value="FUEL-UNLEADED95">Unleaded 95</option>
+                        <option value="FUEL-UNLEADED98">Unleaded 98</option>
+                        <option value="FUEL-DIESEL">Diesel</option>
+                    </select>
 
-            <button id="startStopButton" class="terminal-button start-stop w-full">
-                Stop Scanner
-            </button>
-
-            <div id="error-message" class="text-red-400 mt-2 font-medium hidden"></div>
-        </div>
-
-        <div class="petrol-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
-            <h3 class="text-xl font-bold text-gray-200">Petrol Dispenser</h3>
-            <div class="w-full flex flex-col gap-2">
-                <label for="fuelType" class="text-gray-300 text-left w-full">Fuel Type:</label>
-                <select id="fuelType" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
-                    <option value="FUEL-UNLEADED95">Unleaded 95</option>
-                    <option value="FUEL-UNLEADED98">Unleaded 98</option>
-                    <option value="FUEL-DIESEL">Diesel</option>
-                </select>
-
-                <label for="fuelQuantity" class="text-gray-300 text-left w-full mt-2">Quantity (Litres):</label>
-                <input type="number" id="fuelQuantity" min="1" value="10" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
-            </div>
-            <p class="text-xl font-bold text-green-400">Fuel Cost: <span id="fuelCost">$0.00</span></p>
-            <button id="addFuelToCartButton" class="terminal-button add-fuel w-full">
-                Add Petrol to Cart
-            </button>
-        </div>
-
-        <div class="cart-section flex flex-col">
-            <h2 class="text-2xl font-bold text-gray-200 mb-4 text-center">Shopping Cart</h2>
-            <div class="terminal-screen flex-grow">
-                <ul id="cart-items" class="mb-4 text-gray-300">
-                    <li class="text-gray-500 text-center">No items in cart.</li>
-                </ul>
-                <p class="text-2xl font-extrabold text-green-400 mt-auto pt-4 border-t border-gray-600">Total: <span id="cart-total">$0.00</span></p>
-            </div>
-        </div>
-
-        <div class="discount-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
-            <h3 class="text-xl font-bold text-gray-200">Apply Discount</h3>
-            <div class="flex flex-col sm:flex-row w-full gap-2">
-                <input type="text" id="discountCodeInput" placeholder="Enter code (e.g., SAVE10, EMPLOYEE20)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
-                <button id="applyDiscountButton" class="terminal-button apply-discount">
-                    Apply Discount
+                    <label for="fuelQuantity" class="text-gray-300 text-left w-full mt-2">Quantity (Litres):</label>
+                    <input type="number" id="fuelQuantity" min="1" value="10" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
+                </div>
+                <p class="text-xl font-bold text-green-400">Fuel Cost: <span id="fuelCost">$0.00</span></p>
+                <button id="addFuelToCartButton" class="terminal-button add-fuel w-full">
+                    Add Petrol to Cart
                 </button>
             </div>
-            <p id="discountStatus" class="text-sm text-gray-400"></p>
-        </div>
 
+            <div class="cart-section flex flex-col">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 text-center">Shopping Cart</h2>
+                <div class="terminal-screen flex-grow">
+                    <ul id="cart-items" class="mb-4 text-gray-300">
+                        <li class="text-gray-500 text-center">No items in cart.</li>
+                    </ul>
+                    <p class="text-2xl font-extrabold text-green-400 mt-auto pt-4 border-t border-gray-600">Total: <span id="cart-total">$0.00</span></p>
+                </div>
+            </div>
+
+            <div class="discount-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
+                <h3 class="text-xl font-bold text-gray-200">Apply Discount</h3>
+                <div class="flex flex-col sm:flex-row w-full gap-2">
+                    <input type="text" id="discountCodeInput" placeholder="Enter code (e.g., SAVE10, EMPLOYEE20)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                    <button id="applyDiscountButton" class="terminal-button apply-discount">
+                        Apply Discount
+                    </button>
+                </div>
+                <p id="discountStatus" class="text-sm text-gray-400"></p>
+            </div>
+        </div>
 
         <div class="controls-section flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <button id="clearCartButton" class="terminal-button clear">
@@ -582,7 +597,8 @@
             "GAS-097": { name: "Mini First Aid Kit", price: 8.00 },
             "GAS-098": { name: "Wet Wipes (Travel Pack)", price: 2.50 },
             "GAS-099": { name: "Tissues (Travel Pack)", price: 1.50 },
-            "GAS-100": { name: "Hand Warmer (Disposable)", price: 2.00 }
+            "GAS-100": { name: "Hand Warmer (Disposable)", price: 2.00 },
+            "GAS-101": { name: "Pepsi (Can)", price: 2.00 } // New Pepsi product
         };
 
         // Predefined discount codes
