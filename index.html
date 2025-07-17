@@ -285,7 +285,7 @@
         <div class="discount-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
             <h3 class="text-xl font-bold text-gray-200">Apply Discount</h3>
             <div class="flex flex-col sm:flex-row w-full gap-2">
-                <input type="text" id="discountCodeInput" placeholder="Enter code (e.g., SAVE10)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                <input type="text" id="discountCodeInput" placeholder="Enter code (e.g., SAVE10, EMPLOYEE20)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
                 <button id="applyDiscountButton" class="terminal-button apply-discount">
                     Apply Discount
                 </button>
@@ -370,7 +370,7 @@
         let cart = []; // Array to store items in the cart
         let lastScanTime = 0; // Timestamp of the last successful scan
         const scanDelayMs = 2000; // 2-second delay between scans
-        let currentDiscount = 0; // Current applied discount amount
+        let currentDiscount = { type: 'none', value: 0 }; // Store discount type and value
 
         // Tone.js Synth for scan sound
         let scanSynth;
@@ -415,14 +415,49 @@
             "CODE93-PQRST": { name: "Webcam 1080p", price: 49.99 },
             "CODE93-UVWXY": { name: "Monitor 27-inch", price: 299.00 },
             "CODE93-Z1234": { name: "Ergonomic Chair", price: 350.00 },
-            "CODE93-56789": { name: "Smartwatch", price: 49.99 },
-            "CODE93-0ABCD": { name: "Portable Speaker", price: 65.00 }
+            "CODE93-56789": { name: "Smartwatch", price: 150.00 },
+            "CODE93-0ABCD": { name: "Portable Speaker", price: 65.00 },
+            // Candy Products
+            "CANDY-001": { name: "Gummy Bears (Large)", price: 4.50 },
+            "CANDY-002": { name: "Chocolate Bar (Milk)", price: 2.00 },
+            "CANDY-003": { name: "Sour Worms (Bag)", price: 3.75 },
+            "CANDY-004": { name: "Lollipop (Assorted)", price: 0.75 },
+            "CANDY-005": { name: "Peppermint Candies", price: 2.25 },
+            "CANDY-006": { name: "Caramel Chews", price: 3.00 },
+            "CANDY-007": { name: "Jelly Beans (Mix)", price: 5.00 },
+            "CANDY-008": { name: "Hard Candy Drops", price: 2.50 },
+            "CANDY-009": { name: "Bubblegum (Pack)", price: 1.25 },
+            "CANDY-010": { name: "Licorice Twists", price: 3.25 },
+            "CANDY-011": { name: "Cotton Candy (Tub)", price: 4.00 },
+            "CANDY-012": { name: "Rock Candy Stick", price: 1.50 },
+            "CANDY-013": { name: "Chocolate Truffles (Box)", price: 8.99 },
+            "CANDY-014": { name: "Fruit Chews (Bag)", price: 2.99 },
+            "CANDY-015": { name: "Marshmallows (Giant)", price: 3.50 },
+            "CANDY-016": { name: "Toffee Squares", price: 4.25 },
+            "CANDY-017": { name: "Gumball Machine Refill", price: 6.00 },
+            "CANDY-018": { name: "Chocolate Covered Pretzels", price: 5.50 },
+            "CANDY-019": { name: "Peanut Brittle", price: 6.50 },
+            "CANDY-020": { name: "Candy Buttons (Strip)", price: 1.00 },
+            "CANDY-021": { name: "Fudge (Slice)", price: 4.75 },
+            "CANDY-022": { name: "Chocolate Coins (Bag)", price: 3.99 },
+            "CANDY-023": { name: "Swedish Fish", price: 2.75 },
+            "CANDY-024": { name: "Nerds (Box)", price: 1.75 },
+            "CANDY-025": { name: "Skittles (Large Bag)", price: 3.00 },
+            "CANDY-026": { name: "M&M's (King Size)", price: 2.50 },
+            "CANDY-027": { name: "Reese's Peanut Butter Cups (2-pack)", price: 2.25 },
+            "CANDY-028": { name: "Twizzlers (Large Pack)", price: 3.25 },
+            "CANDY-029": { name: "Starburst (Bag)", price: 2.80 },
+            "CANDY-030": { name: "Hershey's Kisses (Bag)", price: 4.00 },
+            "CANDY-031": { name: "Snickers Bar", price: 1.75 },
+            "CANDY-032": { name: "Kit Kat Bar", price: 1.50 },
+            "CANDY-033": { name: "Milky Way Bar", price: 1.60 },
+            "CANDY-034": { name: "3 Musketeers Bar", price: 1.60 }
         };
 
         // Predefined discount codes
         const discountCodes = {
-            "SAVE10": 10.00, // $10 off
-            "FREESHIP": 0 // Placeholder for future free shipping logic, currently no monetary value
+            "SAVE10": { type: 'fixed', value: 10.00 }, // $10 off
+            "EMPLOYEE20": { type: 'percentage', value: 0.20 } // 20% off
         };
 
         /**
@@ -465,11 +500,12 @@
          * Displays the receipt modal.
          * @param {Array} items - Array of items in the cart.
          * @param {number} subtotal - The subtotal before tax.
-         * @param {number} appliedDiscount - The actual discount amount applied.
+         * @param {number} appliedDiscountAmount - The actual discount amount applied.
+         * @param {string} discountDisplay - Text to show for discount (e.g., "-$10.00" or "-20%")
          * @param {number} tax - The calculated tax amount.
          * @param {number} total - The final total.
          */
-        function showReceiptModal(items, subtotal, appliedDiscount, tax, total) {
+        function showReceiptModal(items, subtotal, appliedDiscountAmount, discountDisplay, tax, total) {
             receiptDate.textContent = new Date().toLocaleString();
             receiptItemsList.innerHTML = ''; // Clear previous items
 
@@ -484,7 +520,7 @@
             });
 
             receiptSubtotal.textContent = `$${subtotal.toFixed(2)}`;
-            receiptDiscount.textContent = `-$${appliedDiscount.toFixed(2)}`;
+            receiptDiscount.textContent = discountDisplay; // Use the formatted discount string
             receiptTax.textContent = `$${tax.toFixed(2)}`;
             receiptTotal.textContent = `$${total.toFixed(2)}`;
 
@@ -552,10 +588,23 @@
                 });
             }
 
-            let finalTotal = subtotal - currentDiscount;
+            let appliedDiscountAmount = 0;
+            let discountDisplayString = '';
+
+            if (currentDiscount.type === 'fixed') {
+                appliedDiscountAmount = currentDiscount.value;
+                discountDisplayString = `-$${appliedDiscountAmount.toFixed(2)}`;
+            } else if (currentDiscount.type === 'percentage') {
+                appliedDiscountAmount = subtotal * currentDiscount.value;
+                discountDisplayString = `-${(currentDiscount.value * 100).toFixed(0)}% ($${appliedDiscountAmount.toFixed(2)})`;
+            }
+
+            let finalTotal = subtotal - appliedDiscountAmount;
             if (finalTotal < 0) finalTotal = 0; // Prevent negative total
 
             cartTotalSpan.textContent = `$${finalTotal.toFixed(2)}`;
+            discountStatus.textContent = currentDiscount.type !== 'none' ? `Discount: ${discountDisplayString}` : '';
+            discountStatus.className = currentDiscount.type !== 'none' ? 'text-sm text-green-400' : 'text-sm text-gray-400';
         }
 
         /**
@@ -563,7 +612,7 @@
          */
         function clearCart() {
             cart = [];
-            currentDiscount = 0; // Reset discount
+            currentDiscount = { type: 'none', value: 0 }; // Reset discount
             discountCodeInput.value = ''; // Clear discount input
             discountStatus.textContent = ''; // Clear discount status
             updateCartDisplay();
@@ -577,22 +626,18 @@
         function applyDiscount() {
             const code = discountCodeInput.value.toUpperCase().trim();
             if (discountCodes.hasOwnProperty(code)) {
-                const discountValue = discountCodes[code];
-                if (discountValue > 0) {
-                    currentDiscount = discountValue;
-                    discountStatus.textContent = `Discount of $${currentDiscount.toFixed(2)} applied!`;
-                    discountStatus.className = 'text-sm text-green-400';
-                    updateCartDisplay();
-                    showMessageModal(`Discount code "${code}" applied: $${currentDiscount.toFixed(2)} off!`);
-                } else {
-                    // Handle other types of discounts like free shipping if implemented
-                    discountStatus.textContent = `Code "${code}" applied (no monetary discount).`;
-                    discountStatus.className = 'text-sm text-yellow-400';
-                    showMessageModal(`Discount code "${code}" applied.`);
-                    currentDiscount = 0; // Ensure no monetary discount if code is for something else
+                const discount = discountCodes[code];
+                currentDiscount = discount; // Set the current discount object
+
+                let message = '';
+                if (discount.type === 'fixed') {
+                    message = `Discount code "${code}" applied: $${discount.value.toFixed(2)} off!`;
+                } else if (discount.type === 'percentage') {
+                    message = `Discount code "${code}" applied: ${(discount.value * 100).toFixed(0)}% off!`;
                 }
+                showMessageModal(message);
             } else {
-                currentDiscount = 0; // No valid discount
+                currentDiscount = { type: 'none', value: 0 }; // No valid discount
                 discountStatus.textContent = "Invalid discount code.";
                 discountStatus.className = 'text-sm text-red-400';
                 showMessageModal("Invalid discount code. Please try again.");
@@ -610,18 +655,29 @@
             }
 
             let subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-            let finalSubtotalAfterDiscount = subtotal - currentDiscount;
+            let appliedDiscountAmount = 0;
+            let discountDisplayString = '';
+
+            if (currentDiscount.type === 'fixed') {
+                appliedDiscountAmount = currentDiscount.value;
+                discountDisplayString = `-$${appliedDiscountAmount.toFixed(2)}`;
+            } else if (currentDiscount.type === 'percentage') {
+                appliedDiscountAmount = subtotal * currentDiscount.value;
+                discountDisplayString = `-${(currentDiscount.value * 100).toFixed(0)}% ($${appliedDiscountAmount.toFixed(2)})`;
+            }
+
+            let finalSubtotalAfterDiscount = subtotal - appliedDiscountAmount;
             if (finalSubtotalAfterDiscount < 0) finalSubtotalAfterDiscount = 0;
 
             const taxRate = 0.08; // 8% tax
             const tax = finalSubtotalAfterDiscount * taxRate;
             const total = finalSubtotalAfterDiscount + tax;
 
-            showReceiptModal(cart, subtotal, currentDiscount, tax, total);
+            showReceiptModal(cart, subtotal, appliedDiscountAmount, discountDisplayString, tax, total);
 
             console.log("Checkout complete. Total:", total.toFixed(2));
             cart = []; // Clear cart after checkout
-            currentDiscount = 0; // Reset discount after checkout
+            currentDiscount = { type: 'none', value: 0 }; // Reset discount after checkout
             discountCodeInput.value = ''; // Clear discount input
             discountStatus.textContent = ''; // Clear discount status
             updateCartDisplay();
