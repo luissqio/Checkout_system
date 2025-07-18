@@ -27,46 +27,32 @@
             border: 2px solid #5a6a7c; /* Slightly lighter border */
             display: grid;
             grid-template-columns: 1fr; /* Default to single column for mobile */
-            grid-template-rows: auto auto 1fr auto; /* Header, Main Content Area, Controls, Barcodes */
+            grid-template-rows: auto; /* Auto rows for mobile flexibility */
             gap: 1.5rem; /* Increased gap for better spacing */
             padding: 2.5rem; /* Increased padding */
             max-width: 1200px;
             width: 100%;
         }
 
-        /* Inner grid for main content sections */
-        .main-content-grid {
-            display: grid;
-            grid-template-columns: 1fr; /* Default to single column for mobile */
-            grid-template-rows: auto auto auto auto; /* Scanner, Petrol, Cart, Discount stacked */
-            gap: 1.5rem;
-            height: 100%; /* Ensure it takes full height of its parent grid cell */
-        }
-
         @media (min-width: 768px) {
             .terminal-container {
-                /* Header, Main Content Area (takes remaining height), Controls */
-                grid-template-rows: auto 1fr auto;
+                grid-template-columns: 1fr 1.5fr; /* Scanner/Petrol on left, Cart/Discount on right */
+                grid-template-rows: auto 1fr auto; /* Header, main content, controls */
                 height: 85vh; /* Fixed height for desktop */
                 gap: 2rem; /* Larger gap on desktop */
             }
-            .main-content-grid {
-                grid-template-columns: 1fr 1.5fr; /* Scanner/Petrol on left, Cart/Discount on right */
-                grid-template-rows: 1fr auto; /* Top row for scanner/cart, bottom row for petrol/discount */
-                gap: 2rem;
-            }
             .scanner-section {
                 grid-column: 1 / 2;
-                grid-row: 1 / 2;
+                grid-row: 1 / 2; /* Scanner in top-left */
             }
             .petrol-section {
                 grid-column: 1 / 2;
-                grid-row: 2 / 3;
-                align-self: start;
+                grid-row: 2 / 3; /* Petrol below scanner on left */
+                align-self: start; /* Align to top of its grid cell */
             }
             .cart-section {
                 grid-column: 2 / 3;
-                grid-row: 1 / 2;
+                grid-row: 1 / 2; /* Cart in top-right */
                 display: flex; /* Make cart section a flex container */
                 flex-direction: column; /* Stack children vertically */
             }
@@ -76,11 +62,12 @@
             }
             .discount-section {
                 grid-column: 2 / 3;
-                grid-row: 2 / 3;
-                align-self: start;
+                grid-row: 2 / 3; /* Discount below cart on right */
+                align-self: start; /* Align to top of its grid cell */
             }
             .controls-section {
                 grid-column: 1 / 3; /* Span both columns */
+                grid-row: 3 / 4;
             }
         }
 
@@ -303,65 +290,63 @@
             <p class="text-lg text-gray-400">Code 93 Barcode Terminal</p>
         </div>
 
-        <!-- Main Content Grid for PC layout -->
-        <div class="main-content-grid">
-            <div class="scanner-section flex flex-col items-center gap-4">
-                <div id="interactive" class="viewport bg-gray-900 relative">
-                    <!-- The video stream will be rendered here by QuaggaJS -->
-                    <div class="scanner-frame"></div>
-                </div>
-
-                <div id="result" class="bg-blue-900 text-blue-300 p-4 rounded-lg text-lg font-semibold break-words w-full text-center">
-                    Scan a Code 93 barcode.
-                </div>
-
-                <button id="startStopButton" class="terminal-button start-stop w-full">
-                    Stop Scanner
-                </button>
-
-                <div id="error-message" class="text-red-400 mt-2 font-medium hidden"></div>
+        <div class="scanner-section flex flex-col items-center gap-4">
+            <div id="interactive" class="viewport bg-gray-900 relative">
+                <!-- The video stream will be rendered here by QuaggaJS -->
+                <div class="scanner-frame"></div>
             </div>
 
-            <div class="petrol-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
-                <h3 class="text-xl font-bold text-gray-200">Petrol Dispenser</h3>
-                <div class="w-full flex flex-col gap-2">
-                    <label for="fuelType" class="text-gray-300 text-left w-full">Fuel Type:</label>
-                    <select id="fuelType" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
-                        <option value="FUEL-UNLEADED95">Unleaded 95</option>
-                        <option value="FUEL-UNLEADED98">Unleaded 98</option>
-                        <option value="FUEL-DIESEL">Diesel</option>
-                    </select>
-
-                    <label for="fuelQuantity" class="text-gray-300 text-left w-full mt-2">Quantity (Litres):</label>
-                    <input type="number" id="fuelQuantity" min="1" value="10" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
-                </div>
-                <p class="text-xl font-bold text-green-400">Fuel Cost: <span id="fuelCost">$0.00</span></p>
-                <button id="addFuelToCartButton" class="terminal-button add-fuel w-full">
-                    Add Petrol to Cart
-                </button>
+            <div id="result" class="bg-blue-900 text-blue-300 p-4 rounded-lg text-lg font-semibold break-words w-full text-center">
+                Scan a Code 93 barcode.
             </div>
 
-            <div class="cart-section flex flex-col">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 text-center">Shopping Cart</h2>
-                <div class="terminal-screen flex-grow">
-                    <ul id="cart-items" class="mb-4 text-gray-300">
-                        <li class="text-gray-500 text-center">No items in cart.</li>
-                    </ul>
-                    <p class="text-2xl font-extrabold text-green-400 mt-auto pt-4 border-t border-gray-600">Total: <span id="cart-total">$0.00</span></p>
-                </div>
-            </div>
+            <button id="startStopButton" class="terminal-button start-stop w-full">
+                Stop Scanner
+            </button>
 
-            <div class="discount-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
-                <h3 class="text-xl font-bold text-gray-200">Apply Discount</h3>
-                <div class="flex flex-col sm:flex-row w-full gap-2">
-                    <input type="text" id="discountCodeInput" placeholder="Enter code (e.g., SAVE10, EMPLOYEE20)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
-                    <button id="applyDiscountButton" class="terminal-button apply-discount">
-                        Apply Discount
-                    </button>
-                </div>
-                <p id="discountStatus" class="text-sm text-gray-400"></p>
+            <div id="error-message" class="text-red-400 mt-2 font-medium hidden"></div>
+        </div>
+
+        <div class="petrol-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
+            <h3 class="text-xl font-bold text-gray-200">Petrol Dispenser</h3>
+            <div class="w-full flex flex-col gap-2">
+                <label for="fuelType" class="text-gray-300 text-left w-full">Fuel Type:</label>
+                <select id="fuelType" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
+                    <option value="FUEL-UNLEADED95">Unleaded 95</option>
+                    <option value="FUEL-UNLEADED98">Unleaded 98</option>
+                    <option value="FUEL-DIESEL">Diesel</option>
+                </select>
+
+                <label for="fuelQuantity" class="text-gray-300 text-left w-full mt-2">Quantity (Litres):</label>
+                <input type="number" id="fuelQuantity" min="1" value="10" class="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500 w-full">
+            </div>
+            <p class="text-xl font-bold text-green-400">Fuel Cost: <span id="fuelCost">$0.00</span></p>
+            <button id="addFuelToCartButton" class="terminal-button add-fuel w-full">
+                Add Petrol to Cart
+            </button>
+        </div>
+
+        <div class="cart-section flex flex-col">
+            <h2 class="text-2xl font-bold text-gray-200 mb-4 text-center">Shopping Cart</h2>
+            <div class="terminal-screen flex-grow">
+                <ul id="cart-items" class="mb-4 text-gray-300">
+                    <li class="text-gray-500 text-center">No items in cart.</li>
+                </ul>
+                <p class="text-2xl font-extrabold text-green-400 mt-auto pt-4 border-t border-gray-600">Total: <span id="cart-total">$0.00</span></p>
             </div>
         </div>
+
+        <div class="discount-section flex flex-col items-center gap-4 p-4 bg-gray-700 rounded-lg shadow-inner">
+            <h3 class="text-xl font-bold text-gray-200">Apply Discount</h3>
+            <div class="flex flex-col sm:flex-row w-full gap-2">
+                <input type="text" id="discountCodeInput" placeholder="Enter code (e.g., SAVE10, EMPLOYEE20)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                <button id="applyDiscountButton" class="terminal-button apply-discount">
+                    Apply Discount
+                </button>
+            </div>
+            <p id="discountStatus" class="text-sm text-gray-400"></p>
+        </div>
+
 
         <div class="controls-section flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <button id="clearCartButton" class="terminal-button clear">
@@ -495,52 +480,109 @@
             "GAS-102": { name: "Smartwatch", price: 150.00 }, // Smartwatch uses new barcode
             "CODE93-0ABCD": { name: "Portable Speaker", price: 65.00 }, // Corrected barcode prefix
             // New Gas Station Items
-            "FUEL-UNLEADED95": { name: "Unleaded 95 Petrol", pricePerLiter: 1.49 },
-            "FUEL-UNLEADED98": { name: "Unleaded 98 Petrol", pricePerLiter: 1.59 },
-            "FUEL-DIESEL": { name: "Diesel Petrol", pricePerLiter: 1.52 },
-            "GAS-001": { name: "Bottled Water (500ml)", price: 0.90 },
-            "GAS-002": { name: "Energy Drink (Can)", price: 1.50 },
-            "GAS-003": { name: "Coffee (Medium)", price: 2.25 },
-            "GAS-004": { name: "Soda (Can, Assorted)", price: 1.30 },
-            "GAS-005": { name: "Chips (Large Bag)", price: 2.10 },
-            "GAS-006": { name: "Beef Jerky (Original)", price: 4.60 },
-            "GAS-007": { name: "Gum (Pack)", price: 1.10 },
-            "GAS-008": { name: "Muffin (Blueberry)", price: 1.85 },
-            "GAS-009": { name: "Hot Dog (Roller Grill)", price: 3.25 },
-            "GAS-010": { name: "Donut (Glazed)", price: 1.35 },
-            "GAS-011": { name: "Windshield Wiper Fluid", price: 4.25 },
-            "GAS-012": { name: "Motor Oil (Quart)", price: 7.25 },
-            "GAS-013": { name: "Air Freshener (Car)", price: 3.00 },
-            "GAS-014": { name: "Disposable Gloves (Pack)", price: 1.70 },
-            "GAS-015": { name: "Travel Pillow", price: 10.00 },
-            "GAS-016": { name: "Phone Charger (USB-C)", price: 13.00 },
-            "GAS-017": { name: "Headphones (Basic Earbuds)", price: 8.50 },
-            "GAS-018": { name: "Sunscreen (Travel Size)", price: 6.25 },
-            "GAS-019": { name: "Pain Reliever (Small Pack)", price: 3.50 },
-            "GAS-020": { name: "Band-Aids (Small Pack)", price: 2.50 },
-            "GAS-021": { name: "Magazines (Assorted)", price: 4.25 },
-            "GAS-022": { name: "Newspaper", price: 1.10 },
-            "GAS-023": { name: "Playing Cards", price: 4.25 },
-            "GAS-024": { name: "Ice (Bag)", price: 2.20 },
-            "GAS-025": { name: "Pizza Slice (Pepperoni)", price: 3.75 },
-            "GAS-026": { name: "Sandwich (Turkey & Cheese)", price: 5.50 },
-            "GAS-027": { name: "Coffee Pods (Single Serve)", price: 1.10 },
-            "GAS-028": { name: "Protein Bar", price: 2.25 },
-            "GAS-029": { name: "Trail Mix (Bag)", price: 3.25 },
-            "GAS-030": { name: "Gummi Bears (Small)", price: 1.25 },
-            "GAS-031": { name: "Chocolate Bar (Large)", price: 2.50 },
-            "GAS-032": { name: "Breath Mints", price: 0.90 },
-            "GAS-033": { name: "Hand Sanitizer", price: 2.75 },
-            "GAS-034": { name: "Toilet Paper (Travel Roll)", price: 1.25 },
-            "GAS-035": { name: "Paper Towels (Small Roll)", price: 1.70 },
-            "GAS-036": { name: "Disposable Camera", price: 15.50 },
-            "GAS-037": { name: "Map (Local Area)", price: 5.25 },
-            "GAS-038": { name: "Flashlight (Mini)", price: 7.50 },
-            "GAS-039": { name: "Batteries (AA 4-pack)", price: 5.00 },
-            "GAS-040": { name: "Screwdriver Set (Small)", price: 9.00 },
-            "GAS-041": { name: "Phone Mount (Car)", price: 12.50 },
-            "GAS-042": { name: "Air Pump (Tyre)", price: 21.00 },
-            "GAS-043": { name: "Screen Cleaner (Wipes)", price: 2.50 },
+            "FUEL-UNLEADED95": { name: "Unleaded 95 Petrol", pricePerLiter: 1.65 },
+            "FUEL-UNLEADED98": { name: "Unleaded 98 Petrol", pricePerLiter: 1.75 },
+            "FUEL-DIESEL": { name: "Diesel Petrol", pricePerLiter: 1.70 },
+            "GAS-001": { name: "Bottled Water (500ml)", price: 1.50 },
+            "GAS-002": { name: "Energy Drink (Can)", price: 3.00 },
+            "GAS-003": { name: "Coffee (Medium)", price: 2.75 },
+            "GAS-004": { name: "Soda (Can, Assorted)", price: 2.25 },
+            "GAS-005": { name: "Chips (Large Bag)", price: 3.50 },
+            "GAS-006": { name: "Beef Jerky (Original)", price: 6.99 },
+            "GAS-007": { name: "Gum (Pack)", price: 1.75 },
+            "GAS-008": { name: "Muffin (Blueberry)", price: 2.50 },
+            "GAS-009": { name: "Hot Dog (Roller Grill)", price: 3.99 },
+            "GAS-010": { name: "Donut (Glazed)", price: 1.99 },
+            "GAS-011": { name: "Windshield Wiper Fluid", price: 5.99 },
+            "GAS-012": { name: "Motor Oil (Quart)", price: 8.50 },
+            "GAS-013": { name: "Air Freshener (Car)", price: 4.25 },
+            "GAS-014": { name: "Disposable Gloves (Pack)", price: 2.00 },
+            "GAS-015": { name: "Travel Pillow", price: 12.00 },
+            "GAS-016": { name: "Phone Charger (USB-C)", price: 15.00 },
+            "GAS-017": { name: "Headphones (Basic Earbuds)", price: 9.99 },
+            "GAS-018": { name: "Sunscreen (Travel Size)", price: 7.50 },
+            "GAS-019": { name: "Pain Reliever (Small Pack)", price: 4.00 },
+            "GAS-020": { name: "Band-Aids (Small Pack)", price: 3.00 },
+            "GAS-021": { name: "Magazines (Assorted)", price: 5.00 },
+            "GAS-022": { name: "Newspaper", price: 1.50 },
+            "GAS-023": { name: "Playing Cards", price: 4.99 },
+            "GAS-024": { name: "Ice (Bag)", price: 2.99 },
+            "GAS-025": { name: "Pizza Slice (Pepperoni)", price: 4.50 },
+            "GAS-026": { name: "Sandwich (Turkey & Cheese)", price: 6.50 },
+            "GAS-027": { name: "Coffee Pods (Single Serve)", price: 1.25 },
+            "GAS-028": { name: "Protein Bar", price: 2.75 },
+            "GAS-029": { name: "Trail Mix (Bag)", price: 4.00 },
+            "GAS-030": { name: "Gummi Bears (Small)", price: 1.50 },
+            "GAS-031": { name: "Chocolate Bar (Large)", price: 3.00 },
+            "GAS-032": { name: "Breath Mints", price: 1.00 },
+            "GAS-033": { name: "Hand Sanitizer", price: 3.25 },
+            "GAS-034": { name: "Toilet Paper (Travel Roll)", price: 1.75 },
+            "GAS-035": { name: "Paper Towels (Small Roll)", price: 2.00 },
+            "GAS-036": { name: "Disposable Camera", price: 18.00 },
+            "GAS-037": { name: "Map (Local Area)", price: 7.00 },
+            "GAS-038": { name: "Flashlight (Mini)", price: 9.00 },
+            "GAS-039": { name: "Batteries (AA 4-pack)", price: 6.00 },
+            "GAS-040": { name: "Screwdriver Set (Small)", price: 11.00 },
+            "GAS-041": { name: "Phone Mount (Car)", price: 14.99 },
+            "GAS-042": { name: "Air Pump (Tyre)", price: 25.00 },
+            "GAS-043": { name: "Screen Cleaner (Wipes)", price: 3.00 },
+            "GAS-044": { name: "Travel Mug", price: 8.99 },
+            "GAS-045": { name: "Ear Plugs (Pack)", price: 2.50 },
+            "GAS-046": { name: "Chewing Tobacco (Can)", price: 7.50 },
+            "GAS-047": { name: "Cigarettes (Pack)", price: 12.00 },
+            "GAS-048": { name: "Lighter", price: 1.50 },
+            "GAS-049": { name: "Lottery Ticket", price: 1.00 },
+            "GAS-050": { name: "Scratch Card", price: 2.00 },
+            "GAS-051": { name: "Deodorant (Travel Size)", price: 4.00 },
+            "GAS-052": { name: "Toothbrush (Travel)", price: 3.00 },
+            "GAS-053": { name: "Toothpaste (Travel)", price: 2.50 },
+            "GAS-054": { name: "Shaving Cream (Travel)", price: 3.50 },
+            "GAS-055": { name: "Razor (Disposable)", price: 2.00 },
+            "GAS-056": { name: "Hand Cream (Small)", price: 4.00 },
+            "GAS-057": { name: "Lip Balm", price: 2.00 },
+            "GAS-058": { name: "Sunglasses (Cheap)", price: 7.00 },
+            "GAS-059": { name: "Umbrella (Compact)", price: 10.00 },
+            "GAS-060": { name: "Rain Poncho", price: 5.00 },
+            "GAS-061": { name: "Gloves (Work)", price: 8.00 },
+            "GAS-062": { name: "Duct Tape (Travel Roll)", price: 6.00 },
+            "GAS-063": { name: "Zip Ties (Pack)", price: 3.00 },
+            "GAS-064": { name: "First Aid Kit (Small)", price: 15.00 },
+            "GAS-065": { name: "Cooler Bag (Small)", price: 18.00 },
+            "GAS-066": { name: "Reusable Shopping Bag", price: 1.00 },
+            "GAS-067": { name: "Pet Food (Small Can)", price: 2.50 },
+            "GAS-068": { name: "Dog Toy", price: 5.00 },
+            "GAS-069": { name: "Cat Food (Small Can)", price: 2.50 },
+            "GAS-070": { name: "Cat Toy", price: 4.00 },
+            "GAS-071": { name: "Phone Case (Universal)", price: 10.00 },
+            "GAS-072": { name: "Screen Protector", price: 8.00 },
+            "GAS-073": { name: "USB Drive (16GB)", price: 7.00 },
+            "GAS-074": { name: "Aux Cable", price: 6.00 },
+            "GAS-075": { name: "Car Air Freshener (Clip)", price: 3.50 },
+            "GAS-076": { name: "Tyre Pressure Gauge", price: 7.00 },
+            "GAS-077": { name: "Jumper Cables", price: 25.00 },
+            "GAS-078": { name: "Emergency Roadside Kit", price: 40.00 },
+            "GAS-079": { name: "Ice Scraper", price: 4.00 },
+            "GAS-080": { name: "Snow Brush", price: 6.00 },
+            "GAS-081": { name: "Antifreeze (Small Bottle)", price: 9.00 },
+            "GAS-082": { name: "Funnel", price: 3.00 },
+            "GAS-083": { name: "Paper Maps (Regional)", price: 8.00 },
+            "GAS-084": { name: "Disposable Camera", price: 18.00 },
+            "GAS-085": { name: "Road Atlas", price: 15.00 },
+            "GAS-086": { name: "Binoculars (Compact)", price: 22.00 },
+            "GAS-087": { name: "Compass", price: 10.00 },
+            "GAS-088": { name: "Whistle (Emergency)", price: 3.00 },
+            "GAS-089": { name: "Emergency Blanket", price: 7.00 },
+            "GAS-090": { name: "Duct Tape (Full Roll)", price: 10.00 },
+            "GAS-091": { name: "Work Gloves (Heavy Duty)", price: 12.00 },
+            "GAS-092": { name: "Screwdriver Set (Multi-bit)", price: 15.00 },
+            "GAS-093": { name: "Pliers (Small)", price: 9.00 },
+            "GAS-094": { name: "Adjustable Wrench (Small)", price: 11.00 },
+            "GAS-095": { name: "Tyre Repair Kit", price: 20.00 },
+            "GAS-096": { name: "Headlamp", price: 16.00 },
+            "GAS-097": { name: "Mini First Aid Kit", price: 8.00 },
+            "GAS-098": { name: "Wet Wipes (Travel Pack)", price: 2.50 },
+            "GAS-099": { name: "Tissues (Travel Pack)", price: 1.50 },
+            "GAS-100": { name: "Hand Warmer (Disposable)", price: 2.00 }
         };
 
         // Predefined discount codes
